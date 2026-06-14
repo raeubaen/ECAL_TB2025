@@ -1,5 +1,7 @@
 RUN=$1
 
+echo Run: $RUN
+
 RECO_FOLDER="${RECO_UNPACKED_OUTDIR}/reco_dqm/"
 LOGS_FOLDER="${RECO_UNPACKED_OUTDIR}/re-reco/re-reco-logs/"
 
