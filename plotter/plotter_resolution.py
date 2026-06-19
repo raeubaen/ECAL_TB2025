@@ -6,15 +6,31 @@ import glob
 from math import sqrt
 import csv
 
-def has_branch(fname, branch):
+
+def is_file_ok(fname, branch):
     f = ROOT.TFile.Open(fname)
     if not f or f.IsZombie():
+        print(f"  ZOMBIE: {fname}")
+        return False
+    if f.TestBit(ROOT.TFile.kRecovered):
+        print(f"  RECOVERED (potentially corrupt): {fname}")
+        f.Close()
         return False
     t = f.Get("tree")
     if not t:
+        print(f"  NO TREE: {fname}")
+        f.Close()
         return False
-
-    return t.GetBranchStatus(branch)
+    if t.GetBranch(branch) is None:
+        print(f"  MISSING BRANCH '{branch}': {fname}")
+        f.Close()
+        return False
+    if t.GetEntries() == 0:
+        print(f"  EMPTY TREE: {fname}")
+        f.Close()
+        return False
+    f.Close()
+    return True
 
 def cbFit(h, name, Run, energy, output_dir, xmin=-1, xmax=-1):
 
@@ -110,7 +126,7 @@ def main(arguments):
 
     dd = json_dict["global"]["run info"]
 
-    Run, Ebins, Channels, do_fitamp, do_channel_matrix_3x3 = [dd[k] for k in ["run list", "run energies", "3x3 channels", "do fitamp", "do matrix 3x3"]]
+    seed, Run, Ebins, do_fitamp, do_channel_matrix_3x3 = [dd[k] for k in ["seed", "run list", "run energies", "do fitamp", "do matrix 3x3"]]
     rows_resolution = []
 
     lin = ROOT.TGraphErrors(len(Ebins))
@@ -131,7 +147,7 @@ def main(arguments):
         pattern = os.path.join(input_dir, f"run_{run}/{run}_*_reco.root")
 
         for f in glob.glob(pattern):
-            if has_branch(f, "ecal_charge_sum_5x5"):
+            if is_file_ok(f, "ecal_charge"):
                 chain.Add(f)
             else:
                 print("Skipping:", f)
@@ -139,26 +155,53 @@ def main(arguments):
         print(f"Run {run}: added {chain.GetNtrees()} files")
 
 
-        if do_fitamp:
-            if do_channel_matrix_3x3:
-                h = ROOT.TH1F(f"FitAmp_3x3_{run}_uncalibrated", "", 1000, 0, 15000)
-                FitAmp_sum_3x3_string = "Sum$(ecal_lsfit_amp * (abs(ecal_iphi_within_5x5) < 2) * (abs(ecal_ieta_within_5x5) < 2))"
-                chain.Draw(f"{FitAmp_sum_3x3_string}>>FitAmp_3x3_{run}_uncalibrated", "", "goff")
-            else:
-                h = ROOT.TH1F(f"FitAmp_5x5_{run}_uncalibrated", "", 1000, 0, 15000)
-                FitAmp_sum_5x5_string = "Sum$(ecal_lsfit_amp * (abs(ecal_iphi_within_5x5) < 3) * (abs(ecal_ieta_within_5x5) < 3))"
-                chain.Draw(f"{FitAmp_sum_5x5_string}>>FitAmp_5x5_{run}_uncalibrated", "", "goff")
-        else:
-            if do_channel_matrix_3x3:
-                h = ROOT.TH1F(f"Charge_3x3_{run}_uncalibrated", "", 1000, 0, 50000)
-                Charge_sum_3x3_string = "Sum$(ecal_charge * (abs(ecal_iphi_within_5x5) < 2) * (abs(ecal_ieta_within_5x5) < 2))"
-                chain.Draw(f"{Charge_sum_3x3_string}>>Charge_3x3_{run}_uncalibrated", "", "goff")
-            else:
-                h = ROOT.TH1F(f"Charge_5x5_{run}_uncalibrated", "", 1000, 0, 50000)
-                Charge_sum_5x5_string = "Sum$(ecal_charge * (abs(ecal_iphi_within_5x5) < 3) * (abs(ecal_ieta_within_5x5) < 3))"
-                chain.Draw(f"{Charge_sum_5x5_string}>>Charge_5x5_{run}_uncalibrated", "", "goff")
+#        if do_fitamp:
+#            if do_channel_matrix_3x3:
+#                h = ROOT.TH1F(f"FitAmp_3x3_{run}_uncalibrated", "", 1000, 0, 15000)
+#                FitAmp_sum_3x3_string = "Sum$(ecal_lsfit_amp * (abs(ecal_iphi_within_5x5) < 2) * (abs(ecal_ieta_within_5x5) < 2))"
+#                chain.Draw(f"{FitAmp_sum_3x3_string}>>FitAmp_3x3_{run}_uncalibrated", "", "goff")
+#            else:
+#                h = ROOT.TH1F(f"FitAmp_5x5_{run}_uncalibrated", "", 1000, 0, 15000)
+#                FitAmp_sum_5x5_string = "Sum$(ecal_lsfit_amp * (abs(ecal_iphi_within_5x5) < 3) * (abs(ecal_ieta_within_5x5) < 3))"
+#                chain.Draw(f"{FitAmp_sum_5x5_string}>>FitAmp_5x5_{run}_uncalibrated", "", "goff")
+#        else:
+#            if do_channel_matrix_3x3:
+#                h = ROOT.TH1F(f"Charge_3x3_{run}_uncalibrated", "", 1000, 0, 50000)
+#                Charge_sum_3x3_string = "Sum$(ecal_charge * (abs(ecal_iphi_within_5x5) < 2) * (abs(ecal_ieta_within_5x5) < 2))"
+#                chain.Draw(f"{Charge_sum_3x3_string}>>Charge_3x3_{run}_uncalibrated", "", "goff")
+#            else:
+#                h = ROOT.TH1F(f"Charge_5x5_{run}_uncalibrated", "", 1000, 0, 50000)
+#                Charge_sum_5x5_string = "Sum$(ecal_charge * (abs(ecal_iphi_within_5x5) < 3) * (abs(ecal_ieta_within_5x5) < 3))"
+#                chain.Draw(f"{Charge_sum_5x5_string}>>Charge_5x5_{run}_uncalibrated", "", "goff")
 
 
+#        if run == 19317:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 100, 10000)
+#        if run == 19318:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 100, 10000)
+#        if run == 19319:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 200, 10000)
+#        if run == 19320:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 200, 10000)
+#        if run == 19321:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 300, 10000)
+#        if run == 19322:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 400, 10000)
+#        if run == 19323:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 500, 10000)
+#        if run == 19324:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 600, 10000)
+#        if run == 19325:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 800, 10000)
+#        if run == 19328:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 900, 10000)
+#        if run == 19329:
+#          h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 1000, 10000)
+
+        h = ROOT.TH1F(f"FitAmp_{run}_uncalibrated", "", 1000, 0, 30000)
+        FitAmp_sum_5x5_string = "Sum$(ecal_lsfit_amp * (abs(ecal_iphi_within_5x5) < 3) * (abs(ecal_ieta_within_5x5) < 3)))"
+        FitAmp_sum_3x3_string_withmask = f"Sum$(ecal_lsfit_amp * (abs(ecal_iphi_within_5x5) < 2) * (abs(ecal_ieta_within_5x5) < 2) * (ecal_lsfit_amp[seed]/FitAmp_sum_5x5_string > 0.7)))"
+        chain.Draw(f"{FitAmp_sum_3x3_string}>>FitAmp_{run}_uncalibrated", "", "goff")
         h.Draw()
 
 #####   uncalibrated histo
@@ -224,18 +267,23 @@ def main(arguments):
 
 #####   saving linearity plot
 
-    if do_fitamp:
-        if do_channel_matrix_3x3:
-            lin.SetTitle(f"Energy linearity ;#Mu_fitAmp_3x3 [ADC];Beam energy [GeV]")
-        else:
-            lin.SetTitle(f"Energy linearity ;#Mu_fitAmp_5x5 [ADC];Beam energy [GeV]")
-    else:
-        if do_channel_matrix_3x3:
-            lin.SetTitle(f"Energy linearity ;#Mu_charge_3x3 [ADC];Beam energy [GeV]")
-        else:
-            lin.SetTitle(f"Energy linearity ;#Mu_charge_5x5 [ADC];Beam energy [GeV]")
+#    if do_fitamp:
+#        if do_channel_matrix_3x3:
+#            lin.SetTitle(f"Energy linearity ;#Mu_fitAmp_3x3 [ADC];Beam energy [GeV]")
+#        else:
+#            lin.SetTitle(f"Energy linearity ;#Mu_fitAmp_5x5 [ADC];Beam energy [GeV]")
+#    else:
+#        if do_channel_matrix_3x3:
+#            lin.SetTitle(f"Energy linearity ;#Mu_charge_3x3 [ADC];Beam energy [GeV]")
+#        else:
+#            lin.SetTitle(f"Energy linearity ;#Mu_charge_5x5 [ADC];Beam energy [GeV]")
+
+    lin.SetTitle(f"Energy linearity ;#Mu_charge_seed [ADC];Beam energy [GeV]")
 
     lin.Draw("AP")
+    ROOT.gStyle.SetOptFit(111)
+    fit = ROOT.TF1("fit", "pol1",0,30000)
+    lin.Fit(fit,"R")
     canvas.Update()
 
     filename_lin = f"Energy_linearity"
@@ -245,17 +293,19 @@ def main(arguments):
     canvas.Clear()
 
 #####   saving resolution plot
+#
+#    if do_fitamp:
+#        if do_channel_matrix_3x3:
+#            res.SetTitle(f"Resolution 3x3 ;Beam energy [GeV];(#sigma/#mu)_{{fitAmp_3x3}} %")
+#        else:
+#            res.SetTitle(f"Resolution 5x5 ;Beam energy [GeV];(#sigma/#mu)_{{fitAmp_5x5}} %")
+#    else:
+#        if do_channel_matrix_3x3:
+#            res.SetTitle(f"Resolution 3x3 ;Beam energy [GeV];(#sigma/#mu)_{{charge_3x3}} %")
+#        else:
+#            res.SetTitle(f"Resolution 5x5 ;Beam energy [GeV];(#sigma/#mu)_{{charge_5x5}} %")
 
-    if do_fitamp:
-        if do_channel_matrix_3x3:
-            res.SetTitle(f"Resolution 3x3 ;Beam energy [GeV];(#sigma/#mu)_{{fitAmp_3x3}} %")
-        else:
-            res.SetTitle(f"Resolution 5x5 ;Beam energy [GeV];(#sigma/#mu)_{{fitAmp_5x5}} %")
-    else:
-        if do_channel_matrix_3x3:
-            res.SetTitle(f"Resolution 3x3 ;Beam energy [GeV];(#sigma/#mu)_{{charge_3x3}} %")
-        else:
-            res.SetTitle(f"Resolution 5x5 ;Beam energy [GeV];(#sigma/#mu)_{{charge_5x5}} %")
+    res.SetTitle(f"Resolution ;Beam energy [GeV];(#sigma/#mu)_{{seed}} %")
 
     ROOT.gStyle.SetOptFit(0)
     ROOT.gStyle.SetOptStat(0)

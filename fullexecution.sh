@@ -64,11 +64,11 @@ SPILL_STR="${SPILL}_${option}"
 start_time=$(date +%s)
 
 
-UNPACKED_FILE="${RECO_UNPACKED_OUTDIR}/DataTree_dqm/$RUN/${SPILL}.root"
+UNPACKED_FILE="${RECO_UNPACKED_OUTDIR}/DataTree/$RUN/${SPILL}.root"
 
 if [ "$dounpack" -ne 0 ]; then
 
-  mkdir -p ${RECO_UNPACKED_OUTDIR}/DataTree_dqm/$RUN/
+  mkdir -p ${RECO_UNPACKED_OUTDIR}/DataTree/$RUN/
 
   if [ $UNPACKER_ROUTINE == "DANTE" ]; then
 
@@ -133,7 +133,7 @@ cd ${WORKING_DIR}
 python3 -m ferrari_core.reco -i ${UNPACKED_FILE} \
     -r "$RUN" \
     -s "$SPILL" \
-    -ro ${RECO_UNPACKED_OUTDIR}/reco_dqm/run_$RUN/ \
+    -ro ${RECO_UNPACKED_OUTDIR}/re-reco/run_$RUN/ \
     -j ${JSON_CONF} \
     -opt $option \
     --do-plots $doplots $plots_options
