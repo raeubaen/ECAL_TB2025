@@ -1,4 +1,4 @@
 [submodule "ferrari_core"]
 	path = ferrari_core
 	url = git@github.com:raeubaen/ferrari_core.git
-	branch = tuned_e_reso_offline
+	branch = main
