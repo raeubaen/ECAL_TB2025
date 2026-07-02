@@ -1,7 +1,7 @@
 {
     "global": {
         "plugins": ["custom_recos.decode_ecal", "custom_recos.decode_mem", "custom_recos.hodo_reco", "custom_recos.bcp_reco", "custom_plot_functions.drawTTgrid"],
-        "spill_type": {
+        "fragment_type": {
             "electrons": {
                 "plot_list": "plotlists/plot_list_electrons.csv",
                 "tree_name": "h4",
@@ -50,7 +50,7 @@
                 "remove_last_n_samples": 0,
                 "geo_needed": ["ieta", "iphi"],
                 "apply_gain_ratios": "high_over_low_gain_ratio",
-                "apply_intercalib": "intercalib_factor",
+                "apply_intercalib": ["intercalib_factor"],
                 "decode_and_select_gains": "decode_ecal",
                 "reco_conf": {
             		    "baseline_samples": 4,

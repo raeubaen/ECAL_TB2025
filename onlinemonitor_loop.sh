@@ -33,16 +33,16 @@ while true; do
 #  
 #	filename=$(cat /tmp/last_file.txt | awk '{print $1}')
 	run=$(cat /tmp/last_file.txt | awk '{print $1}')
-	spill=$(cat /tmp/last_file.txt | awk '{print $2}')
+	fragment=$(cat /tmp/last_file.txt | awk '{print $2}')
 	filename=$(cat /tmp/last_file.txt | awk '{print $3}')
 	mode=$(cat /tmp/last_file.txt | awk '{print $4}')
 	
 
 	echo $run
-	echo $spill
+	echo $fragment
 	echo $mode
-	echo './fullexecution.sh ${run} $spill $mode'
-	./fullexecution.sh $run $spill $mode 
+	echo './fullexecution.sh ${run} $fragment $mode'
+	./fullexecution.sh $run $fragment $mode 
 #	conf=$(cat /tmp/last_file.txt | awk '{print $2}')
 #
 #	run_name=$(echo $filename | awk -F '_' '{print $(NF-3)}')
