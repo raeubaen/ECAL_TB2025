@@ -13,6 +13,7 @@ echo "LOGS in " ${LOGS_FOLDER}
 
 echo > $DONE_FILE
 
+
 for fragment_str in $(ls -1 "$RECO_FOLDER/run_$RUN/${RUN}_"*.root | awk -F "_" '{print $(NF-1)}'); do
 
     # Convert fragment number safely (leading zeros → decimal)
@@ -23,6 +24,7 @@ for fragment_str in $(ls -1 "$RECO_FOLDER/run_$RUN/${RUN}_"*.root | awk -F "_" '
     #    continue
     #fi
 
+    RECO_FOLDER="${RECO_UNPACKED_OUTDIR}/reco_dqm_treso/"
     echo $RECO_FOLDER/run_$RUN/${RUN}_$(printf "%04d" $((10#$fragment)))_reco.root >> $DONE_FILE
 
     echo "Processing fragment $fragment"
