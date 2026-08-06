@@ -129,7 +129,7 @@ cd ${WORKING_DIR}
 cmd="python3 -m ferrari_core.reco -i ${UNPACKED_FILE} \
     -r "$RUN" \
     -s "$FRAGMENT" \
-    -ro ${RECO_UNPACKED_OUTDIR}/reco_dqm_e-reso-tuned-origin/run_$RUN/ \
+    -ro ${RECO_UNPACKED_OUTDIR}/reco_dqm_treso/run_$RUN/ \
     -j ${JSON_CONF} \
     -opt $option \
     --do-plots $doplots $plots_options"
